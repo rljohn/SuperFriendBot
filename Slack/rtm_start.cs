@@ -13,8 +13,13 @@ namespace SuperFriendBot.Slack
 {
     public class rtm_start : SlackBase
     {
-        public string WebSocketUrl { get; set; }
-        public string GeneralChat { get; set; }
+        public Uri WebSocketUrl { get; set; }
+        public List<Channel> ChatChannels { get; set; }
+
+        public rtm_start()
+        {
+            ChatChannels = new List<Channel>();
+        }
 
         public override String Method
         {
@@ -26,10 +31,28 @@ namespace SuperFriendBot.Slack
 
         protected override void ProcessSuccess(JObject obj) 
         {
-            WebSocketUrl = (string)obj["url"];
+            WebSocketUrl = new Uri((string)obj["url"]);
 
             JArray channels = (JArray)obj["channels"];
-            GeneralChat = (string) channels[0]["id"];
+            foreach (JObject channel in channels)
+            {
+                Channel c = new Channel();
+                c.Id = (string)channel["id"];
+                c.Name = (string)channel["name"];
+                ChatChannels.Add(c);
+            }
+
+            JArray users = (JArray)obj["users"];
+            foreach(JObject user in users)
+            {
+                User u = new User();
+                u.Id = (string)user["id"];
+                u.Name = (string)user["name"];
+                u.Color = (string)user["color"];
+                u.Presence = (string)user["presence"];
+            }
+
+            Logger.Log(obj.ToString());
         }
 
         protected override void ProcessFailure(JObject obj) 

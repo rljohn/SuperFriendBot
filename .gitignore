@@ -42,7 +42,9 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-# bin/obj
+# Super Friend Bot
 bin/*
 obj/*
 .vs/*
+*.config
+packages/*

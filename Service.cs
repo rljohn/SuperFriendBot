@@ -1,28 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SuperFriendBot
 {
-    public partial class Service1 : ServiceBase
+    public partial class Service : ServiceBase
     {
-        public Service1()
+        private SuperFriendBot _bot;
+
+        public Service()
         {
             InitializeComponent();
+            _bot = new SuperFriendBot();
         }
 
         protected override void OnStart(string[] args)
         {
+            _bot.Start();
         }
 
         protected override void OnStop()
         {
+            _bot.Stop();
         }
     }
 }

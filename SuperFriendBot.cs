@@ -4,6 +4,8 @@ using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.ServiceProcess;
 using System.Text;
 using System.Threading;
@@ -22,7 +24,9 @@ namespace SuperFriendBot
         enum State
         {
             WaitingToConnect,
-            Connected
+            Connect,
+            Connected,
+            Error
         }
 
         public SuperFriendBot()
@@ -51,16 +55,37 @@ namespace SuperFriendBot
 
         private async void MainThread()
         {
+            rtm_start start = new rtm_start();
+            string WebSocketUrl = "";
+            ClientWebSocket SlackSocket = new ClientWebSocket();
+            UTF8Encoding Encoder = new UTF8Encoding();
+
             while (!_shutdownEvent.WaitOne(0))
             {
                 switch(_state)
                 {
                     case State.WaitingToConnect:
-                        rtm_start connect = new rtm_start();
-                        await connect.Call();
+                        bool result = await start.Call();
+                        if (result == true)
+                        {
+                            WebSocketUrl = start.WebSocketUrl;
+                            _state = State.Connect;
+                        }
+                        else
+                        {
+                            _state = State.Error;
+                        }
+                        break;
+                    case State.Connect:
+                        await SlackSocket.ConnectAsync(new Uri(WebSocketUrl), CancellationToken.None);
+                        string test = "{ \"id\": 1, \"type\": \"message\", \"channel\": \"" + start.GeneralChat + "\", \"text\": \"Hello world\" }";
+                        byte[] buffer = Encoder.GetBytes(test);
+                        await SlackSocket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
                         _state = State.Connected;
                         break;
                     case State.Connected:
+                        break;
+                    case State.Error:
                         break;
                 }
 
